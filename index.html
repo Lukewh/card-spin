@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Hi</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+    </style>
+	</head>
+	<body>
+		<canvas width="100%" height="100%"></canvas>
+
+    <script>
+      var $canvas = document.getElementsByTagName('canvas')[0];
+      var ctx = $canvas.getContext('2d');
+
+      $canvas.width = document.body.clientWidth;
+      $canvas.height = document.body.clientHeight;
+
+
+      var CENTER = {
+        X: $canvas.width / 2,
+        Y: $canvas.height / 2
+      };
+
+      var RADIUS = 10;
+
+      if (CENTER.X < CENTER.Y) {
+        RADIUS = CENTER.X * 0.8;
+      } else {
+        RADIUS = CENTER.Y * 0.8;
+      }
+
+      var touch = {
+        x: 0,
+        y: 0,
+        oldX: 0,
+        oldY: 0,
+        acceleration: 0,
+        oldAcceleration: 0,
+        active: false,
+        angle: 0,
+        base: 0
+      };
+
+      var angle = 0;
+      var maxAccelerated = 0;
+
+      function normalizeAngle(angle) {
+        if (angle < 0 || angle > Math.PI * 2) {
+          return Math.abs((Math.PI * 2) - Math.abs(angle));
+        }
+
+        return angle;
+      }
+
+      var drawArc = function (timestamp) {
+
+        touch.acceleration *= 0.9;
+
+        angle += touch.acceleration;
+
+        ctx.clearRect(0, 0, $canvas.width, $canvas.height);
+        ctx.beginPath();
+        ctx.arc(CENTER.X, CENTER.Y, RADIUS, angle, angle + (1.5 * Math.PI), false);
+        ctx.fillStyle = 'black';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(CENTER.X, CENTER.Y, RADIUS * 0.1, 0, 2 * Math.PI, false);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+
+        window.requestAnimationFrame(drawArc);
+      };
+
+      $canvas.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        touch.x = e.touches[0].clientX;
+        touch.y = e.touches[0].clientY;
+        touch.active = true;
+      }, false);
+
+      $canvas.addEventListener('touchmove', function (e) {
+        e.preventDefault();
+        touch.oldX = touch.x;
+        touch.oldY = touch.y;
+        touch.x = e.touches[0].clientX;
+        touch.y = e.touches[0].clientY;
+
+        var prevAngle = normalizeAngle(Math.atan2(touch.oldY - CENTER.Y, touch.oldX - CENTER.X));
+        var newAngle = normalizeAngle(Math.atan2(touch.y - CENTER.Y, touch.x - CENTER.X));
+
+        touch.oldAcceleration = touch.acceleration;
+
+        touch.acceleration = (newAngle - prevAngle);
+
+        if (touch.acceleration > 2) {
+          touch.acceleration = 0;
+        } else if (touch.acceleration < -2) {
+          touch.acceleration = -0;
+        }
+
+      }, false);
+
+      $canvas.addEventListener('touchend', function (e) {
+        e.preventDefault();
+        touch.active = false;
+      }, false);
+
+      window.requestAnimationFrame(drawArc);
+
+    </script>
+	</body>
+</html>
+
